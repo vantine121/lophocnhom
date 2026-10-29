@@ -11,7 +11,6 @@ import {
   GroupColumn as GroupColumnType, 
   PostItem, 
   ReactionItem, 
-  LayoutMode, 
   MediaType 
 } from '@/types/padlet';
 import { 
@@ -28,12 +27,11 @@ import {
   isSupabaseConfigured,
   supabase
 } from '@/lib/supabase';
-import { Loader2, Plus, Sparkles, FolderPlus } from 'lucide-react';
+import { Loader2, Plus, FolderPlus } from 'lucide-react';
 
 export default function PadletPage() {
   const [groups, setGroups] = useState<GroupColumnType[]>([]);
   const [posts, setPosts] = useState<PostItem[]>([]);
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('split-3');
   const [isLoading, setIsLoading] = useState(true);
 
   // User Profile (Nickname & Avatar - No password needed)
@@ -175,10 +173,8 @@ export default function PadletPage() {
     if (!selectedPostForDrawing) return;
     const postId = selectedPostForDrawing.id;
 
-    // Save image to storage or return DataURL
     const finalUrl = await saveAnnotatedImage(annotatedImageUrl, postId);
 
-    // Update state
     setPosts(prev => prev.map(p => {
       if (p.id === postId) {
         return { ...p, annotated_image_url: finalUrl };
@@ -186,7 +182,6 @@ export default function PadletPage() {
       return p;
     }));
 
-    // Update in DB
     await updatePostInDB(postId, {
       annotated_image_url: finalUrl,
     });
@@ -218,23 +213,10 @@ export default function PadletPage() {
     }));
   };
 
-  // Display columns according to layoutMode
-  const displayedGroups = React.useMemo(() => {
-    if (layoutMode === 'split-2') {
-      return groups.slice(0, 2);
-    }
-    if (layoutMode === 'split-3') {
-      return groups.slice(0, 3);
-    }
-    return groups;
-  }, [groups, layoutMode]);
-
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100/90 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       {/* Top Navigation */}
       <Header
-        layoutMode={layoutMode}
-        onChangeLayout={setLayoutMode}
         onAddGroup={handleAddGroup}
         currentNickname={currentNickname}
         currentAvatar={currentAvatar}
@@ -245,7 +227,7 @@ export default function PadletPage() {
         onOpenSupabaseGuide={() => setIsSupabaseGuideOpen(true)}
       />
 
-      {/* Main Board Workspace */}
+      {/* Main Board Workspace: Cuộn ngang mượt mà cho tất cả các nhóm */}
       <main className="flex-1 overflow-hidden p-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
@@ -274,84 +256,38 @@ export default function PadletPage() {
             </button>
           </div>
         ) : (
-          <div className="h-full">
-            {layoutMode === 'split-2' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
-                {displayedGroups.map((group) => (
-                  <GroupColumn
-                    key={group.id}
-                    group={group}
-                    posts={posts.filter((p) => p.group_id === group.id)}
-                    currentNickname={currentNickname}
-                    onUpdateGroupTitle={handleUpdateGroupTitle}
-                    onUpdateGroupColor={handleUpdateGroupColor}
-                    onDeleteGroup={handleDeleteGroup}
-                    onOpenCreatePost={handleOpenCreatePost}
-                    onOpenDrawingModal={handleOpenDrawingModal}
-                    onToggleReaction={handleToggleReaction}
-                    onAddComment={handleAddComment}
-                    onDeletePost={handleDeletePost}
-                    onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
-                  />
-                ))}
+          <div className="flex gap-4 overflow-x-auto h-full pb-2 custom-scrollbar select-none">
+            {groups.map((group) => (
+              <div key={group.id} className="w-[350px] shrink-0 h-full">
+                <GroupColumn
+                  group={group}
+                  posts={posts.filter((p) => p.group_id === group.id)}
+                  currentNickname={currentNickname}
+                  onUpdateGroupTitle={handleUpdateGroupTitle}
+                  onUpdateGroupColor={handleUpdateGroupColor}
+                  onDeleteGroup={handleDeleteGroup}
+                  onOpenCreatePost={handleOpenCreatePost}
+                  onOpenDrawingModal={handleOpenDrawingModal}
+                  onToggleReaction={handleToggleReaction}
+                  onAddComment={handleAddComment}
+                  onDeletePost={handleDeletePost}
+                  onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
+                />
               </div>
-            )}
+            ))}
 
-            {layoutMode === 'split-3' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
-                {displayedGroups.map((group) => (
-                  <GroupColumn
-                    key={group.id}
-                    group={group}
-                    posts={posts.filter((p) => p.group_id === group.id)}
-                    currentNickname={currentNickname}
-                    onUpdateGroupTitle={handleUpdateGroupTitle}
-                    onUpdateGroupColor={handleUpdateGroupColor}
-                    onDeleteGroup={handleDeleteGroup}
-                    onOpenCreatePost={handleOpenCreatePost}
-                    onOpenDrawingModal={handleOpenDrawingModal}
-                    onToggleReaction={handleToggleReaction}
-                    onAddComment={handleAddComment}
-                    onDeletePost={handleDeletePost}
-                    onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {layoutMode === 'dynamic' && (
-              <div className="flex gap-4 overflow-x-auto h-full pb-2 custom-scrollbar">
-                {groups.map((group) => (
-                  <div key={group.id} className="w-[340px] shrink-0 h-full">
-                    <GroupColumn
-                      group={group}
-                      posts={posts.filter((p) => p.group_id === group.id)}
-                      currentNickname={currentNickname}
-                      onUpdateGroupTitle={handleUpdateGroupTitle}
-                      onUpdateGroupColor={handleUpdateGroupColor}
-                      onDeleteGroup={handleDeleteGroup}
-                      onOpenCreatePost={handleOpenCreatePost}
-                      onOpenDrawingModal={handleOpenDrawingModal}
-                      onToggleReaction={handleToggleReaction}
-                      onAddComment={handleAddComment}
-                      onDeletePost={handleDeletePost}
-                      onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
-                    />
-                  </div>
-                ))}
-
-                {/* Add column card at end */}
-                <div className="w-[280px] shrink-0 h-full flex items-center justify-center p-4">
-                  <button
-                    onClick={handleAddGroup}
-                    className="w-full h-44 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-white/40 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold flex flex-col items-center justify-center gap-2 transition"
-                  >
-                    <Plus className="w-6 h-6" />
-                    <span>+ Thêm cột nhóm mới</span>
-                  </button>
+            {/* Thẻ Thêm Cột Nhóm Mới ở cuối thanh cuộn ngang */}
+            <div className="w-[300px] shrink-0 h-full flex items-center justify-center p-2">
+              <button
+                onClick={handleAddGroup}
+                className="w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-white/40 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold flex flex-col items-center justify-center gap-2.5 transition group shadow-xs"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus className="w-5 h-5" />
                 </div>
-              </div>
-            )}
+                <span>+ Thêm cột nhóm mới</span>
+              </button>
+            </div>
           </div>
         )}
       </main>
