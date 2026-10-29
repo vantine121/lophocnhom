@@ -18,7 +18,7 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
 // ==========================================
 // LOCAL STORAGE MOCK DATA & FALLBACK MANAGER
 // ==========================================
-const LOCAL_STORAGE_KEY = 'padlet_local_database_v2';
+const LOCAL_STORAGE_KEY = 'padlet_local_database_v3';
 
 const INITIAL_LOCAL_DATA: {
   groups: GroupColumn[];
@@ -29,33 +29,7 @@ const INITIAL_LOCAL_DATA: {
     { id: 'group-2', title: 'Nhóm 2: Mặt Trời ☀️', color: 'amber', order_index: 1 },
     { id: 'group-3', title: 'Nhóm 3: Dải Ngân Hà 🌌', color: 'purple', order_index: 2 },
   ],
-  posts: [
-    {
-      id: 'post-demo-1',
-      group_id: 'group-1',
-      author_name: 'Cô Thu Hương (GV)',
-      title: 'Chào mừng các em đến với buổi nộp bài nhóm! 🌟',
-      content: 'Mỗi nhóm hãy cử đại diện hoặc từng thành viên tải ảnh bài tập, sơ đồ tư duy hoặc video lên cột của nhóm mình. Bấm "Vẽ / Chú thích" để chấm điểm trực tiếp lên bài nhé!',
-      media_type: 'image',
-      media_url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80',
-      order_index: 0,
-      created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-      comments: [
-        {
-          id: 'comm-1',
-          post_id: 'post-demo-1',
-          author_name: 'Minh Triết',
-          content: 'Nhóm 1 chúng em đã hoàn thành sơ đồ và đã nộp bài ạ! 🔥',
-          created_at: new Date(Date.now() - 3600000).toISOString()
-        }
-      ],
-      reactions: [
-        { id: 'react-1', post_id: 'post-demo-1', author_name: 'Minh Triết', type: 'heart' },
-        { id: 'react-2', post_id: 'post-demo-1', author_name: 'Bảo Trâm', type: 'like' },
-        { id: 'react-3', post_id: 'post-demo-1', author_name: 'Hải Đăng', type: 'star' }
-      ]
-    }
-  ]
+  posts: []
 };
 
 function getLocalData() {
@@ -77,7 +51,7 @@ function saveLocalData(data: any) {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
   } catch (err) {
-    console.warn('Lưu LocalStorage thất bại (có thể do vượt quá 5MB dung lượng trình duyệt):', err);
+    console.warn('Lưu LocalStorage thất bại:', err);
   }
 }
 
@@ -94,7 +68,7 @@ export async function fetchAllBoardData(): Promise<{
       const { data: groups, error: groupErr } = await supabase
         .from('groups')
         .select('*')
-        .order('order_index', { ascending: true });
+        .order('created_at', { ascending: true });
 
       if (groupErr) throw groupErr;
 
@@ -105,7 +79,7 @@ export async function fetchAllBoardData(): Promise<{
           comments (*),
           reactions (*)
         `)
-        .order('order_index', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (postErr) throw postErr;
 
@@ -135,13 +109,13 @@ export async function fetchAllBoardData(): Promise<{
 export async function addGroupToDB(title: string, color: string = 'blue'): Promise<GroupColumn> {
   if (isSupabaseConfigured && supabase) {
     try {
-      // Let Postgres generate valid UUID
+      // Postgres integer column: use safe 32-bit int
       const { data, error } = await supabase
         .from('groups')
         .insert([{
           title,
           color,
-          order_index: Date.now()
+          order_index: 0
         }])
         .select()
         .single();
@@ -157,7 +131,7 @@ export async function addGroupToDB(title: string, color: string = 'blue'): Promi
     id: `group-${Date.now()}`,
     title,
     color,
-    order_index: Date.now(),
+    order_index: 0,
     created_at: new Date().toISOString(),
   };
 
@@ -201,7 +175,11 @@ export async function deleteGroupFromDB(id: string): Promise<void> {
 export async function createPostInDB(post: Omit<PostItem, 'id' | 'created_at'>): Promise<PostItem> {
   if (isSupabaseConfigured && supabase) {
     try {
-      // Omit `id` to let PostgreSQL generate valid UUID automatically via DEFAULT gen_random_uuid()
+      // IMPORTANT: order_index must be standard integer (32-bit), NOT Date.now()!
+      const safeOrderIndex = typeof post.order_index === 'number' && Math.abs(post.order_index) < 2000000000 
+        ? post.order_index 
+        : 0;
+
       const { data, error } = await supabase
         .from('posts')
         .insert([{
@@ -213,7 +191,7 @@ export async function createPostInDB(post: Omit<PostItem, 'id' | 'created_at'>):
           media_url: post.media_url || '',
           annotated_image_url: post.annotated_image_url || '',
           annotations_data: post.annotations_data || [],
-          order_index: post.order_index || Date.now(),
+          order_index: safeOrderIndex,
         }])
         .select(`
           *,
@@ -289,7 +267,6 @@ export async function deletePostFromDB(id: string): Promise<void> {
 export async function addCommentToDB(postId: string, authorName: string, content: string): Promise<CommentItem> {
   if (isSupabaseConfigured && supabase) {
     try {
-      // Omit `id` to let PostgreSQL generate valid UUID
       const { data, error } = await supabase
         .from('comments')
         .insert([{
@@ -334,7 +311,6 @@ export async function toggleReactionInDB(
 ): Promise<ReactionItem[]> {
   if (isSupabaseConfigured && supabase) {
     try {
-      // Check existing reaction
       const { data: existing } = await supabase
         .from('reactions')
         .select('*')
@@ -344,10 +320,8 @@ export async function toggleReactionInDB(
         .maybeSingle();
 
       if (existing) {
-        // Remove it
         await supabase.from('reactions').delete().eq('id', existing.id);
       } else {
-        // Add it
         await supabase.from('reactions').insert([{
           post_id: postId,
           author_name: authorName,
@@ -366,7 +340,6 @@ export async function toggleReactionInDB(
     }
   }
 
-  // Local storage toggle
   const local = getLocalData();
   let updatedReactions: ReactionItem[] = [];
 
@@ -402,7 +375,6 @@ export async function uploadMediaFile(file: File): Promise<string> {
   if (isSupabaseConfigured && supabase) {
     try {
       const fileExt = file.name.split('.').pop() || 'png';
-      // Clean non-ascii file name to avoid URI issues
       const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
       const filePath = `uploads/${Date.now()}_${cleanName}`;
 

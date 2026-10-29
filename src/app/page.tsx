@@ -153,7 +153,7 @@ export default function PadletPage() {
   }) => {
     const created = await createPostInDB({
       ...postData,
-      order_index: Date.now(),
+      order_index: 0,
     });
     setPosts(prev => [created, ...prev]);
   };
@@ -227,7 +227,7 @@ export default function PadletPage() {
       />
 
       {/* Main Board Workspace: Cuộn ngang mượt mà cho tất cả các nhóm */}
-      <main className="flex-1 overflow-hidden p-4">
+      <main className="flex-1 overflow-hidden p-2 sm:p-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
@@ -255,9 +255,9 @@ export default function PadletPage() {
             </button>
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto h-full pb-2 custom-scrollbar select-none">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto h-full pb-2 px-1 sm:px-0 custom-scrollbar snap-x snap-mandatory select-none">
             {groups.map((group) => (
-              <div key={group.id} className="w-[350px] shrink-0 h-full">
+              <div key={group.id} className="w-[86vw] max-w-[360px] sm:w-[350px] shrink-0 h-full snap-center">
                 <GroupColumn
                   group={group}
                   posts={posts.filter((p) => p.group_id === group.id)}
@@ -276,7 +276,7 @@ export default function PadletPage() {
             ))}
 
             {/* Thẻ Thêm Cột Nhóm Mới ở cuối thanh cuộn ngang */}
-            <div className="w-[300px] shrink-0 h-full flex items-center justify-center p-2">
+            <div className="w-[260px] sm:w-[300px] shrink-0 h-full flex items-center justify-center p-2 snap-center">
               <button
                 onClick={handleAddGroup}
                 className="w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-white/40 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold flex flex-col items-center justify-center gap-2.5 transition group shadow-xs"
