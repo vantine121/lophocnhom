@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   X, Undo, Download, Save, Trash2, Edit3, 
   Circle, Square, Sparkles, AlertCircle, RefreshCw
@@ -30,7 +30,7 @@ const BRUSH_SIZES = [
   { label: 'Mảnh', size: 3 },
   { label: 'Vừa', size: 6 },
   { label: 'Dày', size: 12 },
-  { label: 'Lớn', size: 24 },
+  { label: 'Lớn', size: 22 },
 ];
 
 export default function DrawingCanvasModal({
@@ -54,11 +54,9 @@ export default function DrawingCanvasModal({
   const [imgLoaded, setImgLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  // Drawing tracking
   const startPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const snapshotBeforeShape = useRef<ImageData | null>(null);
 
-  // Initialize Canvas with Image
   useEffect(() => {
     if (!isOpen || !imageUrl) return;
 
@@ -77,7 +75,6 @@ export default function DrawingCanvasModal({
     };
 
     img.onerror = () => {
-      console.warn('Canvas image load error (likely CORS). Retrying with direct data URL');
       setLoadError(true);
     };
   }, [isOpen, imageUrl]);
@@ -86,18 +83,15 @@ export default function DrawingCanvasModal({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas dimensions to match image natural resolution
-    canvas.width = img.naturalWidth || 800;
-    canvas.height = img.naturalHeight || 600;
+    canvas.width = img.naturalWidth || 1000;
+    canvas.height = img.naturalHeight || 750;
 
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
 
-    // Draw background image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
 
-    // Save initial clean state to history
     const initialSnap = ctx.getImageData(0, 0, canvas.width, canvas.height);
     setHistory([initialSnap]);
   };
@@ -109,7 +103,7 @@ export default function DrawingCanvasModal({
     if (!ctx) return;
 
     const snap = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    setHistory(prev => [...prev.slice(-15), snap]); // keep up to 15 undo steps
+    setHistory(prev => [...prev.slice(-12), snap]);
   };
 
   const handleUndo = () => {
@@ -120,7 +114,7 @@ export default function DrawingCanvasModal({
     if (!ctx) return;
 
     const nextHistory = [...history];
-    nextHistory.pop(); // Remove current
+    nextHistory.pop();
     const previousState = nextHistory[nextHistory.length - 1];
 
     if (previousState) {
@@ -134,7 +128,6 @@ export default function DrawingCanvasModal({
     setupCanvas(baseImageRef.current);
   };
 
-  // Convert client mouse/touch coordinates to canvas coordinates
   const getCanvasCoords = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -164,17 +157,16 @@ export default function DrawingCanvasModal({
       ctx.moveTo(x, y);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.lineWidth = brushSize;
 
       if (activeTool === 'eraser') {
-        // Redraw underlying image section or white/transparent
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = brushSize * 2;
-      } else if (activeTool === 'highlighter') {
-        ctx.strokeStyle = `${selectedColor}66`; // 40% alpha
         ctx.lineWidth = brushSize * 2.5;
+      } else if (activeTool === 'highlighter') {
+        ctx.strokeStyle = `${selectedColor}66`;
+        ctx.lineWidth = brushSize * 3;
       } else {
         ctx.strokeStyle = selectedColor;
+        ctx.lineWidth = brushSize;
       }
     }
   };
@@ -224,7 +216,8 @@ export default function DrawingCanvasModal({
     if (!canvas) return;
     setIsSaving(true);
     try {
-      const dataUrl = canvas.toDataURL('image/png', 0.95);
+      // Export as optimized JPEG (250KB) instead of huge PNG (6MB) for instant upload!
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
       await onSaveAnnotation(dataUrl);
       onClose();
     } catch (err) {
@@ -239,140 +232,135 @@ export default function DrawingCanvasModal({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement('a');
-    link.download = `bai-tap-chu-thich-${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = `bai-tap-chu-thich-${Date.now()}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.88);
     link.click();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/90 backdrop-blur-md text-white">
+    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-md text-white select-none">
       {/* Top Bar: Title & Primary Actions */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30">
-            <Edit3 className="w-5 h-5" />
+      <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 bg-slate-900 border-b border-slate-800 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 truncate">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 shrink-0">
+            <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <h2 className="text-base font-bold flex items-center gap-2">
-              Chấm điểm & Chú thích trực tiếp lên bài
-              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
-                Canvas Mode
+          <div className="truncate">
+            <h2 className="text-xs sm:text-sm font-bold flex items-center gap-1.5 truncate">
+              <span>Chấm & Vẽ chú thích</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-400 font-medium hidden sm:inline">
+                Canvas
               </span>
             </h2>
-            <p className="text-xs text-slate-400">
-              Bài của: <span className="font-semibold text-slate-200">{authorName || 'Học sinh'}</span> 
-              {postTitle ? ` • "${postTitle}"` : ''}
+            <p className="text-[10px] sm:text-xs text-slate-400 truncate">
+              Bài của: <span className="font-semibold text-slate-200">{authorName || 'Học sinh'}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <button
             onClick={handleUndo}
             disabled={history.length <= 1}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
             title="Hoàn tác (Undo)"
           >
             <Undo className="w-4 h-4" />
-            <span className="hidden sm:inline">Hoàn tác</span>
           </button>
 
           <button
             onClick={handleClearAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition"
-            title="Xóa mọi nét vẽ"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition"
+            title="Xóa nét"
           >
             <Trash2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Xóa nét</span>
           </button>
 
           <button
             onClick={handleDownload}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 transition"
-            title="Tải ảnh đã chú thích về máy"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 transition hidden sm:flex items-center gap-1"
+            title="Tải về máy"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Tải về</span>
           </button>
 
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 transition disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md shadow-indigo-500/25 transition disabled:opacity-50"
           >
             {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{isSaving ? 'Đang lưu...' : 'Lưu vào bài đăng'}</span>
+            <span>{isSaving ? 'Lưu...' : 'Lưu bài'}</span>
           </button>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition ml-0.5"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Toolbar: Color picker, Brush size, Tools */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 bg-slate-900/90 border-b border-slate-800 text-xs">
+      {/* Toolbar: Responsive Scrollable for Mobile & Desktop */}
+      <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 bg-slate-900/90 border-b border-slate-800 text-xs shrink-0 overflow-x-auto custom-scrollbar">
         {/* Tools */}
-        <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl">
+        <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl shrink-0">
           <button
             onClick={() => setActiveTool('pen')}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition ${
+            className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold transition ${
               activeTool === 'pen' ? 'bg-indigo-600 text-white shadow' : 'text-slate-300 hover:text-white'
             }`}
           >
-            <Edit3 className="w-4 h-4" />
-            <span>Bút viết</span>
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Bút</span>
           </button>
 
           <button
             onClick={() => setActiveTool('highlighter')}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition ${
+            className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold transition ${
               activeTool === 'highlighter' ? 'bg-indigo-600 text-white shadow' : 'text-slate-300 hover:text-white'
             }`}
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5" />
             <span>Dạ quang</span>
           </button>
 
           <button
             onClick={() => setActiveTool('circle')}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition ${
+            className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold transition ${
               activeTool === 'circle' ? 'bg-indigo-600 text-white shadow' : 'text-slate-300 hover:text-white'
             }`}
           >
-            <Circle className="w-4 h-4" />
-            <span>Khoanh tròn</span>
+            <Circle className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Khoanh</span>
           </button>
 
           <button
             onClick={() => setActiveTool('rect')}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition ${
+            className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold transition ${
               activeTool === 'rect' ? 'bg-indigo-600 text-white shadow' : 'text-slate-300 hover:text-white'
             }`}
           >
-            <Square className="w-4 h-4" />
-            <span>Khung vuông</span>
+            <Square className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Khung</span>
           </button>
 
           <button
             onClick={() => setActiveTool('eraser')}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition ${
+            className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold transition ${
               activeTool === 'eraser' ? 'bg-rose-600 text-white shadow' : 'text-slate-300 hover:text-white'
             }`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
             <span>Tẩy</span>
           </button>
         </div>
 
         {/* Color Palette */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-slate-400 font-medium mr-1">Màu:</span>
+        <div className="flex items-center gap-1.5 shrink-0">
           {COLOR_PALETTE.map((c) => (
             <button
               key={c.hex}
@@ -380,34 +368,23 @@ export default function DrawingCanvasModal({
                 setSelectedColor(c.hex);
                 if (activeTool === 'eraser') setActiveTool('pen');
               }}
-              className={`w-6 h-6 rounded-full border-2 transition transform hover:scale-110 ${
-                selectedColor === c.hex ? 'border-white scale-110 shadow-md ring-2 ring-indigo-500' : 'border-transparent'
+              className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition transform hover:scale-110 ${
+                selectedColor === c.hex ? 'border-white scale-110 shadow ring-2 ring-indigo-500' : 'border-transparent'
               }`}
               style={{ backgroundColor: c.hex }}
               title={c.name}
             />
           ))}
-          <input
-            type="color"
-            value={selectedColor}
-            onChange={(e) => {
-              setSelectedColor(e.target.value);
-              if (activeTool === 'eraser') setActiveTool('pen');
-            }}
-            className="w-7 h-7 rounded-full bg-transparent cursor-pointer ml-1"
-            title="Chọn màu khác"
-          />
         </div>
 
         {/* Brush Size */}
-        <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl">
-          <span className="text-slate-400 font-medium px-2">Cỡ nét:</span>
+        <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl shrink-0">
           {BRUSH_SIZES.map((b) => (
             <button
               key={b.size}
               onClick={() => setBrushSize(b.size)}
-              className={`px-2.5 py-1 rounded-md font-medium transition ${
-                brushSize === b.size ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'
+              className={`px-2 py-1 rounded-md text-[11px] font-bold transition ${
+                brushSize === b.size ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               {b.label}
@@ -419,20 +396,17 @@ export default function DrawingCanvasModal({
       {/* Main Canvas Workspace */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-auto flex items-center justify-center p-4 bg-slate-950/60 select-none relative"
+        className="flex-1 overflow-auto flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 select-none relative touch-none"
       >
         {loadError && (
           <div className="flex flex-col items-center gap-2 p-6 rounded-2xl bg-slate-900 border border-rose-500/30 text-center max-w-md">
-            <AlertCircle className="w-10 h-10 text-rose-400" />
-            <h3 className="text-sm font-bold text-white">Không thể tải ảnh vào Canvas</h3>
-            <p className="text-xs text-slate-400">
-              Ảnh từ tên miền ngoài bị chặn quyền truy cập trực tiếp do chính sách CORS. Bạn có thể tải lại ảnh bằng cách kéo thả trực tiếp tệp ảnh từ máy tính!
-            </p>
+            <AlertCircle className="w-8 h-8 text-rose-400" />
+            <h3 className="text-xs font-bold text-white">Không thể tải ảnh vào bảng vẽ</h3>
           </div>
         )}
 
         {!imgLoaded && !loadError && (
-          <div className="flex items-center gap-3 text-slate-400 text-sm">
+          <div className="flex items-center gap-3 text-slate-400 text-xs">
             <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
             <span>Đang chuẩn bị bảng vẽ...</span>
           </div>
@@ -449,13 +423,6 @@ export default function DrawingCanvasModal({
           }`}
         />
       </div>
-
-      {/* Footer Info */}
-      <div className="px-4 py-2 bg-slate-900/80 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-        <span>💡 Mẹo: Hỗ trợ dùng chuột hoặc bút cảm ứng trên iPad/máy tính bảng để chấm bài thuận tiện nhất.</span>
-        <span>Nhấn "Lưu vào bài đăng" sau khi vẽ xong để mọi người cùng xem</span>
-      </div>
     </div>
   );
 }
-

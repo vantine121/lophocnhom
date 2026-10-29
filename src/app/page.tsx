@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import GroupColumn from '@/components/GroupColumn';
 import CreatePostModal from '@/components/CreatePostModal';
 import DrawingCanvasModal from '@/components/DrawingCanvasModal';
+import PresentationModal from '@/components/PresentationModal';
 import NicknameModal from '@/components/NicknameModal';
 import SupabaseGuideModal from '@/components/SupabaseGuideModal';
 import { 
@@ -45,6 +46,8 @@ export default function PadletPage() {
   const [activeGroupIdForPost, setActiveGroupIdForPost] = useState('');
   const [isDrawingOpen, setIsDrawingOpen] = useState(false);
   const [selectedPostForDrawing, setSelectedPostForDrawing] = useState<PostItem | null>(null);
+  const [isPresentationOpen, setIsPresentationOpen] = useState(false);
+  const [presentationInitialPostId, setPresentationInitialPostId] = useState<string | undefined>(undefined);
   const [isSupabaseGuideOpen, setIsSupabaseGuideOpen] = useState(false);
 
   // Load User Profile from localStorage
@@ -187,6 +190,31 @@ export default function PadletPage() {
     });
   };
 
+  // Presentation Slide Handlers
+  const handleOpenPresentation = (post?: PostItem) => {
+    if (post) {
+      setPresentationInitialPostId(post.id);
+    } else {
+      setPresentationInitialPostId(undefined);
+    }
+    setIsPresentationOpen(true);
+  };
+
+  const handleSavePresentationAnnotation = async (postId: string, annotatedImageUrl: string) => {
+    const finalUrl = await saveAnnotatedImage(annotatedImageUrl, postId);
+
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return { ...p, annotated_image_url: finalUrl };
+      }
+      return p;
+    }));
+
+    await updatePostInDB(postId, {
+      annotated_image_url: finalUrl,
+    });
+  };
+
   // Interaction Handlers
   const handleToggleReaction = async (postId: string, type: ReactionItem['type']) => {
     const author = currentNickname || 'Học sinh ẩn danh';
@@ -218,6 +246,7 @@ export default function PadletPage() {
       {/* Top Navigation */}
       <Header
         onAddGroup={handleAddGroup}
+        onOpenPresentation={() => handleOpenPresentation()}
         currentNickname={currentNickname}
         currentAvatar={currentAvatar}
         onOpenNicknameModal={() => {
@@ -267,6 +296,7 @@ export default function PadletPage() {
                   onDeleteGroup={handleDeleteGroup}
                   onOpenCreatePost={handleOpenCreatePost}
                   onOpenDrawingModal={handleOpenDrawingModal}
+                  onOpenPresentation={handleOpenPresentation}
                   onToggleReaction={handleToggleReaction}
                   onAddComment={handleAddComment}
                   onDeletePost={handleDeletePost}
@@ -315,6 +345,18 @@ export default function PadletPage() {
           onSaveAnnotation={handleSaveAnnotation}
         />
       )}
+
+      {/* Trình Chiếu Toàn Màn Hình & Chấm Điểm Slide Trực Tiếp */}
+      <PresentationModal
+        isOpen={isPresentationOpen}
+        onClose={() => {
+          setIsPresentationOpen(false);
+          setPresentationInitialPostId(undefined);
+        }}
+        posts={posts}
+        initialPostId={presentationInitialPostId}
+        onSaveAnnotation={handleSavePresentationAnnotation}
+      />
 
       <NicknameModal
         isOpen={isNicknameModalOpen}

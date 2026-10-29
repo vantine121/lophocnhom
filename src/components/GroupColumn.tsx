@@ -17,6 +17,7 @@ interface GroupColumnProps {
   onDeleteGroup: (groupId: string) => void;
   onOpenCreatePost: (groupId: string) => void;
   onOpenDrawingModal: (post: PostItem) => void;
+  onOpenPresentation?: (post: PostItem) => void;
   onToggleReaction: (postId: string, type: ReactionItem['type']) => void;
   onAddComment: (postId: string, content: string) => Promise<void>;
   onDeletePost: (postId: string) => void;
@@ -41,6 +42,7 @@ export default function GroupColumn({
   onDeleteGroup,
   onOpenCreatePost,
   onOpenDrawingModal,
+  onOpenPresentation,
   onToggleReaction,
   onAddComment,
   onDeletePost,
@@ -178,6 +180,7 @@ export default function GroupColumn({
               post={post}
               currentNickname={currentNickname}
               onOpenDrawingModal={onOpenDrawingModal}
+              onOpenPresentation={onOpenPresentation}
               onToggleReaction={onToggleReaction}
               onAddComment={onAddComment}
               onDeletePost={onDeletePost}

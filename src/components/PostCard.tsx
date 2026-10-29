@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { 
   Edit3, Trash2, Video, Image as ImageIcon, 
-  ExternalLink, Layers, Eye
+  ExternalLink, Layers, Eye, PlaySquare
 } from 'lucide-react';
 import { PostItem, ReactionItem } from '@/types/padlet';
 import ReactionBar from './ReactionBar';
@@ -13,6 +13,7 @@ interface PostCardProps {
   post: PostItem;
   currentNickname: string;
   onOpenDrawingModal: (post: PostItem) => void;
+  onOpenPresentation?: (post: PostItem) => void;
   onToggleReaction: (postId: string, type: ReactionItem['type']) => void;
   onAddComment: (postId: string, content: string) => Promise<void>;
   onDeletePost: (postId: string) => void;
@@ -30,12 +31,12 @@ export default function PostCard({
   post,
   currentNickname,
   onOpenDrawingModal,
+  onOpenPresentation,
   onToggleReaction,
   onAddComment,
   onDeletePost,
   onOpenNicknameModal,
 }: PostCardProps) {
-  // Toggle between viewing original media and annotated overlay
   const [showAnnotationView, setShowAnnotationView] = useState(Boolean(post.annotated_image_url));
 
   const hasAnnotation = Boolean(post.annotated_image_url);
@@ -46,11 +47,11 @@ export default function PostCard({
   const ytEmbedUrl = post.media_type === 'youtube' ? getYouTubeEmbedUrl(post.media_url) : null;
 
   return (
-    <div className="group relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col">
+    <div className="group relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col">
       {/* Post Header: Author & Controls */}
       <div className="p-3.5 pb-2 flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold uppercase shadow-xs">
             {post.author_name ? post.author_name.charAt(0) : 'H'}
           </div>
           <div>
@@ -73,17 +74,17 @@ export default function PostCard({
           </div>
         </div>
 
-        {/* Delete Post Button */}
+        {/* Delete Post Button - Always visible on mobile, hover on desktop */}
         <button
           onClick={() => {
             if (confirm(`Bạn có chắc muốn xóa bài đăng "${post.title || 'này'}" không?`)) {
               onDeletePost(post.id);
             }
           }}
-          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition"
+          className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition"
           title="Xóa bài đăng"
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
         </button>
       </div>
 
@@ -122,23 +123,39 @@ export default function PostCard({
                 }`}
               >
                 <Layers className="w-2.5 h-2.5" />
-                <span>Đã vẽ chú thích</span>
+                <span>Đã chú thích</span>
               </button>
             </div>
           )}
 
-          {/* Canvas Draw Trigger Button */}
-          <button
-            onClick={() => onOpenDrawingModal(post)}
-            className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 backdrop-blur-sm text-white text-xs font-bold shadow-md hover:shadow-indigo-500/25 transition transform active:scale-95"
-            title="Mở bảng vẽ để chấm bài hoặc ghi chú trực tiếp lên ảnh"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Vẽ / Chú thích 🎨</span>
-          </button>
+          {/* Action Buttons: Presentation & Draw */}
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+            {onOpenPresentation && (
+              <button
+                onClick={() => onOpenPresentation(post)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-900/85 hover:bg-slate-900 text-white text-[11px] font-bold shadow border border-slate-700/80 transition transform active:scale-95"
+                title="Trình chiếu toàn màn hình & chấm điểm trực tiếp"
+              >
+                <PlaySquare className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Trình chiếu</span>
+              </button>
+            )}
 
-          {/* Image */}
-          <div className="relative overflow-hidden flex items-center justify-center max-h-80 group/img">
+            <button
+              onClick={() => onOpenDrawingModal(post)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 backdrop-blur-sm text-white text-[11px] font-bold shadow-md hover:shadow-indigo-500/25 transition transform active:scale-95"
+              title="Mở bảng vẽ để chấm bài hoặc ghi chú trực tiếp lên ảnh"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Vẽ 🎨</span>
+            </button>
+          </div>
+
+          {/* Clickable Image to view in Presentation Mode */}
+          <div 
+            onClick={() => onOpenPresentation && onOpenPresentation(post)}
+            className="relative overflow-hidden flex items-center justify-center max-h-80 cursor-pointer group/img"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={activeImageUrl}
@@ -192,4 +209,3 @@ export default function PostCard({
     </div>
   );
 }
-

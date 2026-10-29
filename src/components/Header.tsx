@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, PlaySquare } from 'lucide-react';
 
 interface HeaderProps {
   onAddGroup: () => void;
+  onOpenPresentation?: () => void;
   currentNickname: string;
   currentAvatar: string;
   onOpenNicknameModal: () => void;
@@ -12,6 +13,7 @@ interface HeaderProps {
 
 export default function Header({
   onAddGroup,
+  onOpenPresentation,
   currentNickname,
   currentAvatar,
   onOpenNicknameModal,
@@ -37,8 +39,20 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right Actions: Add Group, User Nickname */}
+        {/* Right Actions: Presentation, Add Group, User Nickname */}
         <div className="flex items-center gap-2">
+          {/* Fullscreen Presentation Mode Button */}
+          {onOpenPresentation && (
+            <button
+              onClick={onOpenPresentation}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition transform active:scale-95"
+              title="Chế độ trình chiếu bài nộp toàn màn hình"
+            >
+              <PlaySquare className="w-4 h-4 text-emerald-200" />
+              <span className="hidden sm:inline">Trình chiếu</span>
+            </button>
+          )}
+
           {/* Add Group Button */}
           <button
             onClick={onAddGroup}
