@@ -1,69 +1,399 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useState, useEffect, useCallback } from 'react';
+import Header from '@/components/Header';
+import GroupColumn from '@/components/GroupColumn';
+import CreatePostModal from '@/components/CreatePostModal';
+import DrawingCanvasModal from '@/components/DrawingCanvasModal';
+import NicknameModal from '@/components/NicknameModal';
+import SupabaseGuideModal from '@/components/SupabaseGuideModal';
+import { 
+  GroupColumn as GroupColumnType, 
+  PostItem, 
+  ReactionItem, 
+  LayoutMode, 
+  MediaType 
+} from '@/types/padlet';
+import { 
+  fetchAllBoardData, 
+  addGroupToDB, 
+  updateGroupInDB, 
+  deleteGroupFromDB,
+  createPostInDB,
+  updatePostInDB,
+  deletePostFromDB,
+  addCommentToDB,
+  toggleReactionInDB,
+  saveAnnotatedImage,
+  isSupabaseConfigured,
+  supabase
+} from '@/lib/supabase';
+import { Loader2, Plus, Sparkles, FolderPlus } from 'lucide-react';
+
+export default function PadletPage() {
+  const [groups, setGroups] = useState<GroupColumnType[]>([]);
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('split-3');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // User Profile (Nickname & Avatar - No password needed)
+  const [currentNickname, setCurrentNickname] = useState('');
+  const [currentAvatar, setCurrentAvatar] = useState('🎒');
+  const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
+  const [isInitialNicknamePrompt, setIsInitialNicknamePrompt] = useState(false);
+
+  // Modals
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [activeGroupIdForPost, setActiveGroupIdForPost] = useState('');
+  const [isDrawingOpen, setIsDrawingOpen] = useState(false);
+  const [selectedPostForDrawing, setSelectedPostForDrawing] = useState<PostItem | null>(null);
+  const [isSupabaseGuideOpen, setIsSupabaseGuideOpen] = useState(false);
+
+  // Load User Profile from localStorage
+  useEffect(() => {
+    try {
+      const savedName = localStorage.getItem('padlet_user_nickname');
+      const savedAvatar = localStorage.getItem('padlet_user_avatar');
+      if (savedName) {
+        setCurrentNickname(savedName);
+        if (savedAvatar) setCurrentAvatar(savedAvatar);
+      } else {
+        // First visit prompt
+        setIsInitialNicknamePrompt(true);
+        setIsNicknameModalOpen(true);
+      }
+    } catch (e) {
+      console.warn('LocalStorage access warning:', e);
+    }
+  }, []);
+
+  // Fetch Board Data
+  const loadData = useCallback(async () => {
+    try {
+      const data = await fetchAllBoardData();
+      setGroups(data.groups || []);
+      setPosts(data.posts || []);
+    } catch (err) {
+      console.error('Failed to load board data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+
+    // Setup Supabase Realtime Subscription if configured
+    if (isSupabaseConfigured && supabase) {
+      const client = supabase;
+      const channel = client
+        .channel('board-realtime-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, () => loadData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => loadData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => loadData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, () => loadData())
+        .subscribe();
+
+      return () => {
+        client.removeChannel(channel);
+      };
+    }
+  }, [loadData]);
+
+  // Handle Nickname Save
+  const handleSaveNickname = (nickname: string, avatar: string) => {
+    setCurrentNickname(nickname);
+    setCurrentAvatar(avatar);
+    try {
+      localStorage.setItem('padlet_user_nickname', nickname);
+      localStorage.setItem('padlet_user_avatar', avatar);
+    } catch (e) {
+      console.warn('Failed to save to localStorage:', e);
+    }
+  };
+
+  // Group Handlers
+  const handleAddGroup = async () => {
+    const groupCount = groups.length + 1;
+    const defaultTitle = `Nhóm ${groupCount}`;
+    const colors = ['blue', 'emerald', 'amber', 'purple', 'rose', 'indigo'];
+    const chosenColor = colors[(groupCount - 1) % colors.length];
+
+    const newGroup = await addGroupToDB(defaultTitle, chosenColor);
+    setGroups(prev => [...prev, newGroup]);
+  };
+
+  const handleUpdateGroupTitle = async (groupId: string, newTitle: string) => {
+    setGroups(prev => prev.map(g => g.id === groupId ? { ...g, title: newTitle } : g));
+    await updateGroupInDB(groupId, { title: newTitle });
+  };
+
+  const handleUpdateGroupColor = async (groupId: string, newColor: string) => {
+    setGroups(prev => prev.map(g => g.id === groupId ? { ...g, color: newColor } : g));
+    await updateGroupInDB(groupId, { color: newColor });
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    setGroups(prev => prev.filter(g => g.id !== groupId));
+    setPosts(prev => prev.filter(p => p.group_id !== groupId));
+    await deleteGroupFromDB(groupId);
+  };
+
+  // Post Handlers
+  const handleOpenCreatePost = (groupId: string) => {
+    setActiveGroupIdForPost(groupId);
+    setIsCreatePostOpen(true);
+  };
+
+  const handlePostCreated = async (postData: {
+    group_id: string;
+    author_name: string;
+    title: string;
+    content: string;
+    media_type: MediaType;
+    media_url: string;
+  }) => {
+    const created = await createPostInDB({
+      ...postData,
+      order_index: Date.now(),
+    });
+    setPosts(prev => [created, ...prev]);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    await deletePostFromDB(postId);
+  };
+
+  // Drawing Annotation Handlers
+  const handleOpenDrawingModal = (post: PostItem) => {
+    setSelectedPostForDrawing(post);
+    setIsDrawingOpen(true);
+  };
+
+  const handleSaveAnnotation = async (annotatedImageUrl: string) => {
+    if (!selectedPostForDrawing) return;
+    const postId = selectedPostForDrawing.id;
+
+    // Save image to storage or return DataURL
+    const finalUrl = await saveAnnotatedImage(annotatedImageUrl, postId);
+
+    // Update state
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return { ...p, annotated_image_url: finalUrl };
+      }
+      return p;
+    }));
+
+    // Update in DB
+    await updatePostInDB(postId, {
+      annotated_image_url: finalUrl,
+    });
+  };
+
+  // Interaction Handlers
+  const handleToggleReaction = async (postId: string, type: ReactionItem['type']) => {
+    const author = currentNickname || 'Học sinh ẩn danh';
+    const updatedReactions = await toggleReactionInDB(postId, author, type);
+
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return { ...p, reactions: updatedReactions };
+      }
+      return p;
+    }));
+  };
+
+  const handleAddComment = async (postId: string, content: string) => {
+    const author = currentNickname || 'Học sinh ẩn danh';
+    const newComment = await addCommentToDB(postId, author, content);
+
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        const comments = p.comments || [];
+        return { ...p, comments: [...comments, newComment] };
+      }
+      return p;
+    }));
+  };
+
+  // Display columns according to layoutMode
+  const displayedGroups = React.useMemo(() => {
+    if (layoutMode === 'split-2') {
+      return groups.slice(0, 2);
+    }
+    if (layoutMode === 'split-3') {
+      return groups.slice(0, 3);
+    }
+    return groups;
+  }, [groups, layoutMode]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100/90 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      {/* Top Navigation */}
+      <Header
+        layoutMode={layoutMode}
+        onChangeLayout={setLayoutMode}
+        onAddGroup={handleAddGroup}
+        currentNickname={currentNickname}
+        currentAvatar={currentAvatar}
+        onOpenNicknameModal={() => {
+          setIsInitialNicknamePrompt(false);
+          setIsNicknameModalOpen(true);
+        }}
+        onOpenSupabaseGuide={() => setIsSupabaseGuideOpen(true)}
+      />
+
+      {/* Main Board Workspace */}
+      <main className="flex-1 overflow-hidden p-4">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+            <p className="text-sm font-semibold">Đang tải không gian lớp học...</p>
+          </div>
+        ) : groups.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto text-center space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <FolderPlus className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-800 dark:text-white">
+                Chưa có nhóm nào trong lớp
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Hãy tạo cột nhóm đầu tiên để các bạn học sinh có thể nộp bài và thảo luận.
+              </p>
+            </div>
+            <button
+              onClick={handleAddGroup}
+              className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/20 flex items-center gap-2 transition"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              <Plus className="w-4 h-4" />
+              <span>Tạo Nhóm 1</span>
+            </button>
+          </div>
+        ) : (
+          <div className="h-full">
+            {layoutMode === 'split-2' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                {displayedGroups.map((group) => (
+                  <GroupColumn
+                    key={group.id}
+                    group={group}
+                    posts={posts.filter((p) => p.group_id === group.id)}
+                    currentNickname={currentNickname}
+                    onUpdateGroupTitle={handleUpdateGroupTitle}
+                    onUpdateGroupColor={handleUpdateGroupColor}
+                    onDeleteGroup={handleDeleteGroup}
+                    onOpenCreatePost={handleOpenCreatePost}
+                    onOpenDrawingModal={handleOpenDrawingModal}
+                    onToggleReaction={handleToggleReaction}
+                    onAddComment={handleAddComment}
+                    onDeletePost={handleDeletePost}
+                    onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {layoutMode === 'split-3' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
+                {displayedGroups.map((group) => (
+                  <GroupColumn
+                    key={group.id}
+                    group={group}
+                    posts={posts.filter((p) => p.group_id === group.id)}
+                    currentNickname={currentNickname}
+                    onUpdateGroupTitle={handleUpdateGroupTitle}
+                    onUpdateGroupColor={handleUpdateGroupColor}
+                    onDeleteGroup={handleDeleteGroup}
+                    onOpenCreatePost={handleOpenCreatePost}
+                    onOpenDrawingModal={handleOpenDrawingModal}
+                    onToggleReaction={handleToggleReaction}
+                    onAddComment={handleAddComment}
+                    onDeletePost={handleDeletePost}
+                    onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {layoutMode === 'dynamic' && (
+              <div className="flex gap-4 overflow-x-auto h-full pb-2 custom-scrollbar">
+                {groups.map((group) => (
+                  <div key={group.id} className="w-[340px] shrink-0 h-full">
+                    <GroupColumn
+                      group={group}
+                      posts={posts.filter((p) => p.group_id === group.id)}
+                      currentNickname={currentNickname}
+                      onUpdateGroupTitle={handleUpdateGroupTitle}
+                      onUpdateGroupColor={handleUpdateGroupColor}
+                      onDeleteGroup={handleDeleteGroup}
+                      onOpenCreatePost={handleOpenCreatePost}
+                      onOpenDrawingModal={handleOpenDrawingModal}
+                      onToggleReaction={handleToggleReaction}
+                      onAddComment={handleAddComment}
+                      onDeletePost={handleDeletePost}
+                      onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
+                    />
+                  </div>
+                ))}
+
+                {/* Add column card at end */}
+                <div className="w-[280px] shrink-0 h-full flex items-center justify-center p-4">
+                  <button
+                    onClick={handleAddGroup}
+                    className="w-full h-44 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-white/40 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold flex flex-col items-center justify-center gap-2 transition"
+                  >
+                    <Plus className="w-6 h-6" />
+                    <span>+ Thêm cột nhóm mới</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </main>
+
+      {/* Modals */}
+      <CreatePostModal
+        isOpen={isCreatePostOpen}
+        onClose={() => setIsCreatePostOpen(false)}
+        groupId={activeGroupIdForPost}
+        groups={groups}
+        currentNickname={currentNickname}
+        onPostCreated={handlePostCreated}
+        onOpenNicknameModal={() => setIsNicknameModalOpen(true)}
+      />
+
+      {isDrawingOpen && selectedPostForDrawing && (
+        <DrawingCanvasModal
+          isOpen={isDrawingOpen}
+          onClose={() => {
+            setIsDrawingOpen(false);
+            setSelectedPostForDrawing(null);
+          }}
+          imageUrl={selectedPostForDrawing.annotated_image_url || selectedPostForDrawing.media_url || ''}
+          postTitle={selectedPostForDrawing.title}
+          authorName={selectedPostForDrawing.author_name}
+          onSaveAnnotation={handleSaveAnnotation}
+        />
+      )}
+
+      <NicknameModal
+        isOpen={isNicknameModalOpen}
+        onClose={() => setIsNicknameModalOpen(false)}
+        currentNickname={currentNickname}
+        currentAvatar={currentAvatar}
+        onSave={handleSaveNickname}
+        isInitialPrompt={isInitialNicknamePrompt}
+      />
+
+      <SupabaseGuideModal
+        isOpen={isSupabaseGuideOpen}
+        onClose={() => setIsSupabaseGuideOpen(false)}
+      />
     </div>
   );
 }
