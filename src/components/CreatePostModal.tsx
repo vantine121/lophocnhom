@@ -327,7 +327,7 @@ export default function CreatePostModal({
             {isUploading ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Đang tải lên...</span>
+                <span>Đang nén & tải lên...</span>
               </>
             ) : (
               <span>Đăng bài nộp ✨</span>
