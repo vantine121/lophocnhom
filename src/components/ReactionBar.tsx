@@ -25,6 +25,8 @@ export default function ReactionBar({
   currentNickname,
   onToggleReaction,
 }: ReactionBarProps) {
+  const safeReactions = Array.isArray(reactions) ? reactions : [];
+
   const handleReactionClick = (e: React.MouseEvent<HTMLButtonElement>, type: ReactionItem['type']) => {
     // Confetti effect at button position
     const rect = e.currentTarget.getBoundingClientRect();
@@ -32,10 +34,10 @@ export default function ReactionBar({
     const y = (rect.top + rect.height / 2) / window.innerHeight;
 
     confetti({
-      particleCount: 20,
-      spread: 45,
+      particleCount: 22,
+      spread: 50,
       origin: { x, y },
-      ticks: 150,
+      ticks: 160,
       colors: ['#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'],
     });
 
@@ -43,9 +45,9 @@ export default function ReactionBar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-850">
+    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
       {REACTION_CONFIG.map(({ type, emoji, label, activeColor }) => {
-        const matchingReactions = reactions.filter((r) => r.type === type);
+        const matchingReactions = safeReactions.filter((r) => r.type === type);
         const count = matchingReactions.length;
         const hasReacted = Boolean(
           currentNickname && matchingReactions.some((r) => r.author_name === currentNickname)
@@ -55,19 +57,26 @@ export default function ReactionBar({
           <button
             key={type}
             onClick={(e) => handleReactionClick(e, type)}
-            title={`${label} (${matchingReactions.map(r => r.author_name).join(', ') || 'Chưa có ai'})`}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all transform active:scale-90 ${
+            title={`${label} (${matchingReactions.map((r) => r.author_name).join(', ') || 'Chưa có ai'})`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all transform active:scale-90 ${
               hasReacted
-                ? `${activeColor} shadow-sm font-bold scale-105`
+                ? `${activeColor} shadow-xs font-bold scale-105`
                 : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
             }`}
           >
             <span className="text-sm select-none">{emoji}</span>
-            <span className={`text-[11px] ${count > 0 ? 'inline' : 'hidden'}`}>{count}</span>
+            <span className={`text-[11px] font-bold ${
+              hasReacted 
+                ? 'text-inherit font-extrabold' 
+                : count > 0 
+                  ? 'text-slate-800 dark:text-slate-200' 
+                  : 'text-slate-400 dark:text-slate-500 font-medium'
+            }`}>
+              {count}
+            </span>
           </button>
         );
       })}
     </div>
   );
 }
-

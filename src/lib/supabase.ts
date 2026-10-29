@@ -18,13 +18,11 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
 // ==========================================
 // LOCAL STORAGE MOCK DATA & FALLBACK MANAGER
 // ==========================================
-const LOCAL_STORAGE_KEY = 'padlet_local_database_v1';
+const LOCAL_STORAGE_KEY = 'padlet_local_database_v2';
 
 const INITIAL_LOCAL_DATA: {
   groups: GroupColumn[];
   posts: PostItem[];
-  comments: CommentItem[];
-  reactions: ReactionItem[];
 } = {
   groups: [
     { id: 'group-1', title: 'Nhóm 1: Sao Hỏa 🚀', color: 'blue', order_index: 0 },
@@ -37,7 +35,7 @@ const INITIAL_LOCAL_DATA: {
       group_id: 'group-1',
       author_name: 'Cô Thu Hương (GV)',
       title: 'Chào mừng các em đến với buổi nộp bài nhóm! 🌟',
-      content: 'Mỗi nhóm hãy cử đại diện hoặc từng thành viên tải ảnh bài tập, sơ đồ tư duy hoặc video thuyết trình lên cột nhóm của mình. Thầy cô và các bạn có thể nhấp vào nút "Vẽ / Chú thích" để chấm điểm và khoanh tròn nhận xét trực tiếp lên ảnh nhé!',
+      content: 'Mỗi nhóm hãy cử đại diện hoặc từng thành viên tải ảnh bài tập, sơ đồ tư duy hoặc video lên cột của nhóm mình. Bấm "Vẽ / Chú thích" để chấm điểm trực tiếp lên bài nhé!',
       media_type: 'image',
       media_url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80',
       order_index: 0,
@@ -47,7 +45,7 @@ const INITIAL_LOCAL_DATA: {
           id: 'comm-1',
           post_id: 'post-demo-1',
           author_name: 'Minh Triết',
-          content: 'Nhóm 1 chúng em đã hoàn thành sơ đồ và đang chụp ảnh tải lên ạ! 🔥',
+          content: 'Nhóm 1 chúng em đã hoàn thành sơ đồ và đã nộp bài ạ! 🔥',
           created_at: new Date(Date.now() - 3600000).toISOString()
         }
       ],
@@ -56,25 +54,8 @@ const INITIAL_LOCAL_DATA: {
         { id: 'react-2', post_id: 'post-demo-1', author_name: 'Bảo Trâm', type: 'like' },
         { id: 'react-3', post_id: 'post-demo-1', author_name: 'Hải Đăng', type: 'star' }
       ]
-    },
-    {
-      id: 'post-demo-2',
-      group_id: 'group-2',
-      author_name: 'Hải Đăng (Nhóm 2)',
-      title: 'Bài tập Sinh học: Quá trình Quang hợp 🌿',
-      content: 'Nhóm 2 xin nộp sơ đồ minh họa cơ chế pha sáng và pha tối của quang hợp ở thực vật. Mời thầy cô và các bạn góp ý giúp nhóm!',
-      media_type: 'image',
-      media_url: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=1200&q=80',
-      order_index: 0,
-      created_at: new Date(Date.now() - 1800000).toISOString(),
-      comments: [],
-      reactions: [
-        { id: 'react-4', post_id: 'post-demo-2', author_name: 'Thanh Thảo', type: 'celebrate' }
-      ]
     }
-  ],
-  comments: [],
-  reactions: []
+  ]
 };
 
 function getLocalData() {
@@ -96,7 +77,7 @@ function saveLocalData(data: any) {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
   } catch (err) {
-    console.error('Lỗi lưu LocalStorage:', err);
+    console.warn('Lưu LocalStorage thất bại (có thể do vượt quá 5MB dung lượng trình duyệt):', err);
   }
 }
 
@@ -128,9 +109,15 @@ export async function fetchAllBoardData(): Promise<{
 
       if (postErr) throw postErr;
 
+      const mappedPosts = (posts || []).map((p: any) => ({
+        ...p,
+        comments: Array.isArray(p.comments) ? p.comments : [],
+        reactions: Array.isArray(p.reactions) ? p.reactions : [],
+      }));
+
       return {
         groups: groups || [],
-        posts: posts || [],
+        posts: mappedPosts,
       };
     } catch (err) {
       console.warn('Supabase fetch failed, falling back to local storage:', err);
@@ -146,32 +133,33 @@ export async function fetchAllBoardData(): Promise<{
 }
 
 export async function addGroupToDB(title: string, color: string = 'blue'): Promise<GroupColumn> {
-  const newGroup: GroupColumn = {
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `group-${Date.now()}`,
-    title,
-    color,
-    order_index: Date.now(),
-    created_at: new Date().toISOString(),
-  };
-
   if (isSupabaseConfigured && supabase) {
     try {
+      // Let Postgres generate valid UUID
       const { data, error } = await supabase
         .from('groups')
         .insert([{
-          id: newGroup.id,
-          title: newGroup.title,
-          color: newGroup.color,
-          order_index: newGroup.order_index
+          title,
+          color,
+          order_index: Date.now()
         }])
         .select()
         .single();
 
       if (!error && data) return data as GroupColumn;
+      if (error) console.error('Supabase addGroup error:', error);
     } catch (e) {
-      console.error('Supabase addGroup error:', e);
+      console.error('Supabase addGroup exception:', e);
     }
   }
+
+  const newGroup: GroupColumn = {
+    id: `group-${Date.now()}`,
+    title,
+    color,
+    order_index: Date.now(),
+    created_at: new Date().toISOString(),
+  };
 
   const local = getLocalData();
   local.groups.push(newGroup);
@@ -211,44 +199,53 @@ export async function deleteGroupFromDB(id: string): Promise<void> {
 }
 
 export async function createPostInDB(post: Omit<PostItem, 'id' | 'created_at'>): Promise<PostItem> {
-  const newPost: PostItem = {
-    ...post,
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `post-${Date.now()}`,
-    created_at: new Date().toISOString(),
-    comments: [],
-    reactions: [],
-  };
-
   if (isSupabaseConfigured && supabase) {
     try {
+      // Omit `id` to let PostgreSQL generate valid UUID automatically via DEFAULT gen_random_uuid()
       const { data, error } = await supabase
         .from('posts')
         .insert([{
-          id: newPost.id,
-          group_id: newPost.group_id,
-          author_name: newPost.author_name,
-          title: newPost.title,
-          content: newPost.content,
-          media_type: newPost.media_type,
-          media_url: newPost.media_url || '',
-          annotated_image_url: newPost.annotated_image_url || '',
-          annotations_data: newPost.annotations_data || [],
-          order_index: newPost.order_index || 0,
+          group_id: post.group_id,
+          author_name: post.author_name,
+          title: post.title,
+          content: post.content,
+          media_type: post.media_type,
+          media_url: post.media_url || '',
+          annotated_image_url: post.annotated_image_url || '',
+          annotations_data: post.annotations_data || [],
+          order_index: post.order_index || Date.now(),
         }])
-        .select()
+        .select(`
+          *,
+          comments (*),
+          reactions (*)
+        `)
         .single();
 
       if (!error && data) {
         return {
           ...data,
-          comments: [],
-          reactions: [],
+          comments: Array.isArray(data.comments) ? data.comments : [],
+          reactions: Array.isArray(data.reactions) ? data.reactions : [],
         } as PostItem;
       }
-    } catch (e) {
-      console.error('Supabase createPost error:', e);
+      if (error) {
+        console.error('Supabase createPost error:', error);
+        throw new Error(error.message);
+      }
+    } catch (e: any) {
+      console.error('Supabase createPost exception:', e);
+      throw e;
     }
   }
+
+  const newPost: PostItem = {
+    ...post,
+    id: `post-${Date.now()}`,
+    created_at: new Date().toISOString(),
+    comments: [],
+    reactions: [],
+  };
 
   const local = getLocalData();
   local.posts.unshift(newPost);
@@ -290,27 +287,33 @@ export async function deletePostFromDB(id: string): Promise<void> {
 }
 
 export async function addCommentToDB(postId: string, authorName: string, content: string): Promise<CommentItem> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // Omit `id` to let PostgreSQL generate valid UUID
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([{
+          post_id: postId,
+          author_name: authorName,
+          content,
+        }])
+        .select()
+        .single();
+
+      if (!error && data) return data as CommentItem;
+      if (error) console.error('Supabase addComment error:', error);
+    } catch (e) {
+      console.error('Supabase addComment exception:', e);
+    }
+  }
+
   const newComment: CommentItem = {
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `comm-${Date.now()}`,
+    id: `comm-${Date.now()}`,
     post_id: postId,
     author_name: authorName,
     content,
     created_at: new Date().toISOString(),
   };
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('comments')
-        .insert([newComment])
-        .select()
-        .single();
-
-      if (!error && data) return data as CommentItem;
-    } catch (e) {
-      console.error('Supabase addComment error:', e);
-    }
-  }
 
   const local = getLocalData();
   local.posts = local.posts.map((p: PostItem) => {
@@ -394,33 +397,37 @@ export async function toggleReactionInDB(
   return updatedReactions;
 }
 
-// Upload file to Supabase Storage or convert to Data URL for instant local preview
+// Upload file to Supabase Storage permanently
 export async function uploadMediaFile(file: File): Promise<string> {
   if (isSupabaseConfigured && supabase) {
     try {
       const fileExt = file.name.split('.').pop() || 'png';
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const filePath = `uploads/${fileName}`;
+      // Clean non-ascii file name to avoid URI issues
+      const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+      const filePath = `uploads/${Date.now()}_${cleanName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('padlet-media')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false,
+          upsert: true,
+          contentType: file.type || 'image/png'
         });
 
       if (!uploadError) {
         const { data } = supabase.storage.from('padlet-media').getPublicUrl(filePath);
         return data.publicUrl;
       } else {
-        console.warn('Storage upload error, falling back to base64:', uploadError);
+        console.error('Storage upload error:', uploadError);
+        throw new Error('Lỗi tải tệp lên Storage: ' + uploadError.message);
       }
-    } catch (err) {
-      console.warn('Storage upload failed, using DataURL:', err);
+    } catch (err: any) {
+      console.error('Storage upload failed:', err);
+      throw err;
     }
   }
 
-  // Fallback to base64 DataURL (works offline, no server needed!)
+  // Fallback to base64 DataURL
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -429,14 +436,13 @@ export async function uploadMediaFile(file: File): Promise<string> {
   });
 }
 
-// Convert base64 / blob to image url and upload to storage if possible
+// Convert base64 / blob to image url and upload to storage
 export async function saveAnnotatedImage(dataUrl: string, postId: string): Promise<string> {
   if (isSupabaseConfigured && supabase) {
     try {
-      // convert base64 dataUrl to blob
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const fileName = `annotations/${postId}-${Date.now()}.png`;
+      const fileName = `annotations/${postId}_${Date.now()}.png`;
 
       const { error } = await supabase.storage
         .from('padlet-media')
@@ -454,7 +460,5 @@ export async function saveAnnotatedImage(dataUrl: string, postId: string): Promi
     }
   }
 
-  // Return dataUrl directly
   return dataUrl;
 }
-
