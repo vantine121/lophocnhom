@@ -2,14 +2,12 @@
 
 import React from 'react';
 import { Plus, BookOpen } from 'lucide-react';
-import { isSupabaseConfigured } from '@/lib/supabase';
 
 interface HeaderProps {
   onAddGroup: () => void;
   currentNickname: string;
   currentAvatar: string;
   onOpenNicknameModal: () => void;
-  onOpenSupabaseGuide: () => void;
 }
 
 export default function Header({
@@ -17,7 +15,6 @@ export default function Header({
   currentNickname,
   currentAvatar,
   onOpenNicknameModal,
-  onOpenSupabaseGuide,
 }: HeaderProps) {
   return (
     <header className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800 backdrop-blur-md sticky top-0 z-30 px-4 py-2.5 shadow-xs">
@@ -40,7 +37,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right Actions: Add Group, User Nickname, Supabase Status */}
+        {/* Right Actions: Add Group, User Nickname */}
         <div className="flex items-center gap-2">
           {/* Add Group Button */}
           <button
@@ -64,22 +61,6 @@ export default function Header({
                 {currentNickname || 'Đặt tên'}
               </span>
             </div>
-          </button>
-
-          {/* Supabase Status Pill */}
-          <button
-            onClick={onOpenSupabaseGuide}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition ${
-              isSupabaseConfigured
-                ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/60 hover:bg-amber-100'
-            }`}
-            title="Xem trạng thái Supabase"
-          >
-            <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-            <span className="hidden md:inline">
-              {isSupabaseConfigured ? 'Supabase Online' : 'Kết nối Supabase'}
-            </span>
           </button>
         </div>
       </div>

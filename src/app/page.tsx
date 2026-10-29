@@ -224,7 +224,6 @@ export default function PadletPage() {
           setIsInitialNicknamePrompt(false);
           setIsNicknameModalOpen(true);
         }}
-        onOpenSupabaseGuide={() => setIsSupabaseGuideOpen(true)}
       />
 
       {/* Main Board Workspace: Cuộn ngang mượt mà cho tất cả các nhóm */}
