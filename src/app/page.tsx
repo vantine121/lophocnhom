@@ -8,6 +8,7 @@ import DrawingCanvasModal from '@/components/DrawingCanvasModal';
 import PresentationModal from '@/components/PresentationModal';
 import NicknameModal from '@/components/NicknameModal';
 import SupabaseGuideModal from '@/components/SupabaseGuideModal';
+import QrCodeModal from '@/components/QrCodeModal';
 import { 
   GroupColumn as GroupColumnType, 
   PostItem, 
@@ -49,6 +50,7 @@ export default function PadletPage() {
   const [isPresentationOpen, setIsPresentationOpen] = useState(false);
   const [presentationInitialPostId, setPresentationInitialPostId] = useState<string | undefined>(undefined);
   const [isSupabaseGuideOpen, setIsSupabaseGuideOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Load User Profile from localStorage
   useEffect(() => {
@@ -247,6 +249,7 @@ export default function PadletPage() {
       <Header
         onAddGroup={handleAddGroup}
         onOpenPresentation={() => handleOpenPresentation()}
+        onOpenQrCode={() => setIsQrModalOpen(true)}
         currentNickname={currentNickname}
         currentAvatar={currentAvatar}
         onOpenNicknameModal={() => {
@@ -370,6 +373,11 @@ export default function PadletPage() {
       <SupabaseGuideModal
         isOpen={isSupabaseGuideOpen}
         onClose={() => setIsSupabaseGuideOpen(false)}
+      />
+
+      <QrCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
       />
     </div>
   );

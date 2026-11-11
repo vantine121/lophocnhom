@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Plus, School, PlaySquare, Sparkles, Microscope, Languages } from 'lucide-react';
+import { Plus, School, PlaySquare, Sparkles, Microscope, Languages, QrCode } from 'lucide-react';
 
 interface HeaderProps {
   onAddGroup: () => void;
   onOpenPresentation?: () => void;
+  onOpenQrCode?: () => void;
   currentNickname: string;
   currentAvatar: string;
   onOpenNicknameModal: () => void;
@@ -14,6 +15,7 @@ interface HeaderProps {
 export default function Header({
   onAddGroup,
   onOpenPresentation,
+  onOpenQrCode,
   currentNickname,
   currentAvatar,
   onOpenNicknameModal,
@@ -73,6 +75,18 @@ export default function Header({
 
         {/* Right Actions: Presentation, Add Group, User Nickname */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* QR Code Button */}
+          {onOpenQrCode && (
+            <button
+              onClick={onOpenQrCode}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 shadow-xs transition transform active:scale-95"
+              title="Mở mã QR để học sinh hoặc người tham dự quét vào lớp ngay"
+            >
+              <QrCode className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="hidden sm:inline">Mã QR</span>
+            </button>
+          )}
+
           {/* Fullscreen Presentation Mode Button */}
           {onOpenPresentation && (
             <button
