@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, BookOpen, PlaySquare } from 'lucide-react';
+import { Plus, School, PlaySquare, Sparkles } from 'lucide-react';
 
 interface HeaderProps {
   onAddGroup: () => void;
@@ -23,17 +23,20 @@ export default function Header({
       <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-3">
         {/* Brand / Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-            <BookOpen className="w-5 h-5" />
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20">
+            <School className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>Lớp Học Thông Minh</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                Padlet Nhóm
+            <h1 className="flex items-center gap-2 flex-wrap">
+              <span className="text-lg sm:text-xl font-black uppercase tracking-wider bg-gradient-to-r from-blue-700 via-indigo-600 to-rose-600 bg-clip-text text-transparent drop-shadow-xs">
+                THCS ĐẰNG LÂM
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-xs">
+                <Sparkles className="w-3 h-3 text-indigo-500" />
+                Lớp Học Nhóm
               </span>
             </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium tracking-tight">
               Nộp bài tập • Chấm điểm & Vẽ chú thích trực tiếp • Thảo luận nhóm
             </p>
           </div>

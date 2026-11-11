@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Class Padlet - Nộp Bài Tập Nhóm & Chú Thích Trực Tuyến",
-  description: "Ứng dụng web nộp bài tập nhóm cho học sinh và giáo viên: chia cột linh hoạt, vẽ chú thích chấm bài trên ảnh, bình luận và thả cảm xúc realtime.",
+  title: "THCS ĐẰNG LÂM - Nộp Bài Tập Nhóm & Chú Thích Trực Tuyến",
+  description: "Ứng dụng web nộp bài tập nhóm trường THCS Đằng Lâm: chia cột linh hoạt, vẽ chú thích chấm bài trên ảnh, bình luận và thảo luận trực tuyến.",
 };
 
 export default function RootLayout({
