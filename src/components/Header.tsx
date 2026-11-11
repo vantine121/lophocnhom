@@ -46,8 +46,8 @@ export default function Header({
           </div>
         </div>
 
-        {/* Center: Chuyên đề KHTN - Nổi bật trong card tinh tế, cân bằng khoảng trống */}
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-1.5 mx-2 lg:mx-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/70 dark:from-slate-800/70 dark:via-slate-800/50 dark:to-slate-800/70 border border-blue-100/90 dark:border-slate-700/60 shadow-xs min-w-0 max-w-2xl xl:max-w-3xl">
+        {/* Center: Chuyên đề KHTN - Nổi bật, rộng rãi, hiển thị trọn vẹn 100% tiêu đề */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-2 sm:px-4 mx-1 sm:mx-3 py-1 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/70 dark:from-slate-800/70 dark:via-slate-800/50 dark:to-slate-800/70 border border-blue-100/90 dark:border-slate-700/60 shadow-xs min-w-0 max-w-4xl">
           {/* Top badges */}
           <div className="flex items-center gap-2 justify-center mb-0.5 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-blue-600 text-white tracking-wider shadow-xs flex items-center gap-1">
@@ -59,28 +59,27 @@ export default function Header({
             </span>
           </div>
 
-          {/* Dòng 1: Tiêu đề chuyên đề to rõ */}
-          <h2 className="text-xs sm:text-sm lg:text-[15px] font-black tracking-tight text-blue-950 dark:text-white uppercase leading-tight line-clamp-1">
+          {/* Dòng 1: Tiêu đề chuyên đề to rõ, hiển thị trọn vẹn không bị cắt ngắn */}
+          <h2 className="text-xs sm:text-[13px] md:text-sm lg:text-[15px] font-black tracking-tight text-blue-950 dark:text-white uppercase leading-snug">
             PHÁT TRIỂN NĂNG LỰC SỐ VÀ TÍCH HỢP TIẾNG ANH CHUYÊN NGÀNH
           </h2>
 
           {/* Dòng 2: Tên bài học nổi bật màu đỏ rực rỡ chuẩn poster */}
-          <p className="text-[11px] sm:text-xs lg:text-[13px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wide leading-tight line-clamp-1 mt-0.5">
+          <p className="text-[11px] sm:text-xs md:text-[12.5px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wide leading-snug mt-0.5">
             QUA BÀI 20 - SỰ LỚN LÊN VÀ SINH SẢN CỦA TẾ BÀO
           </p>
         </div>
 
-        {/* Right Actions: Presentation, Add Group, User Nickname */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right Actions: Thu gọn tinh tế theo biểu tượng để nhường toàn bộ không gian cho tiêu đề */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* QR Code Button */}
           {onOpenQrCode && (
             <button
               onClick={onOpenQrCode}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 shadow-xs transition transform active:scale-95"
-              title="Mở mã QR để học sinh hoặc người tham dự quét vào lớp ngay"
+              className="w-9 h-9 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 shadow-xs flex items-center justify-center transition transform active:scale-95"
+              title="Mở mã QR lớp học"
             >
               <QrCode className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="hidden sm:inline">Mã QR</span>
             </button>
           )}
 
@@ -88,36 +87,32 @@ export default function Header({
           {onOpenPresentation && (
             <button
               onClick={onOpenPresentation}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition transform active:scale-95"
-              title="Chế độ trình chiếu bài nộp toàn màn hình"
+              className="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center justify-center transition transform active:scale-95"
+              title="Chế độ trình chiếu toàn màn hình"
             >
-              <PlaySquare className="w-4 h-4 text-emerald-200" />
-              <span className="hidden sm:inline">Trình chiếu</span>
+              <PlaySquare className="w-4 h-4 text-emerald-100" />
             </button>
           )}
 
           {/* Add Group Button */}
           <button
             onClick={onAddGroup}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-500/20 transition"
+            className="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs flex items-center justify-center transition transform active:scale-95"
+            title="Thêm cột nhóm mới"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Thêm cột nhóm</span>
           </button>
 
           {/* User Nickname Button */}
           <button
             onClick={onOpenNicknameModal}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs hover:border-indigo-400 transition"
-            title="Nhấp để thay đổi tên hoặc biểu tượng hiển thị"
+            className="h-9 px-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs hover:border-indigo-400 transition flex items-center gap-1.5"
+            title={`Biệt danh của bạn: ${currentNickname || 'Chưa đặt'}`}
           >
-            <span className="text-base select-none">{currentAvatar || '🎒'}</span>
-            <div className="text-left">
-              <span className="text-[10px] text-slate-400 block leading-tight">Bạn là</span>
-              <span className="text-xs font-bold text-slate-850 dark:text-white max-w-[120px] truncate block leading-tight">
-                {currentNickname || 'Đặt tên'}
-              </span>
-            </div>
+            <span className="text-base select-none leading-none">{currentAvatar || '🎒'}</span>
+            <span className="hidden xl:inline text-xs font-bold text-slate-800 dark:text-white max-w-[80px] truncate leading-none">
+              {currentNickname || 'Bạn là'}
+            </span>
           </button>
         </div>
       </div>
