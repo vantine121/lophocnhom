@@ -57,9 +57,6 @@ export default function Header({
             <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
               Môn KHTN 6
             </span>
-            <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300">
-              • GV: Lê Thị Thanh Nhàn
-            </span>
           </div>
 
           {/* Dòng 1: Tiêu đề chuyên đề to rõ */}
