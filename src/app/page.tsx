@@ -217,17 +217,39 @@ export default function PadletPage() {
     });
   };
 
-  // Interaction Handlers
+  // Interaction Handlers (Cho phép thả tim / cảm xúc vô hạn)
   const handleToggleReaction = async (postId: string, type: ReactionItem['type']) => {
     const author = currentNickname || 'Học sinh ẩn danh';
-    const updatedReactions = await toggleReactionInDB(postId, author, type);
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const optimisticReaction: ReactionItem = {
+      id: tempId,
+      post_id: postId,
+      author_name: `${author}#${Date.now()}`,
+      type,
+      created_at: new Date().toISOString(),
+    };
 
+    // Tăng số lượt ngay lập tức trên màn hình (Optimistic UI) để bấm liên tục cực mượt
     setPosts(prev => prev.map(p => {
       if (p.id === postId) {
-        return { ...p, reactions: updatedReactions };
+        return { ...p, reactions: [...(p.reactions || []), optimisticReaction] };
       }
       return p;
     }));
+
+    try {
+      const updatedReactions = await toggleReactionInDB(postId, author, type);
+      if (updatedReactions && updatedReactions.length > 0) {
+        setPosts(prev => prev.map(p => {
+          if (p.id === postId) {
+            return { ...p, reactions: updatedReactions };
+          }
+          return p;
+        }));
+      }
+    } catch (err) {
+      console.error('Lỗi lưu cảm xúc:', err);
+    }
   };
 
   const handleAddComment = async (postId: string, content: string) => {

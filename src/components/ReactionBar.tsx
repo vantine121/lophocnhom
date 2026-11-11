@@ -50,15 +50,18 @@ export default function ReactionBar({
         const matchingReactions = safeReactions.filter((r) => r.type === type);
         const count = matchingReactions.length;
         const hasReacted = Boolean(
-          currentNickname && matchingReactions.some((r) => r.author_name === currentNickname)
+          currentNickname && matchingReactions.some((r) => r.author_name === currentNickname || r.author_name.startsWith(currentNickname + '#'))
         );
+
+        const uniqueAuthors = Array.from(new Set(matchingReactions.map((r) => r.author_name.split('#')[0])));
+        const authorTooltip = uniqueAuthors.length > 0 ? uniqueAuthors.join(', ') : 'Chưa có ai';
 
         return (
           <button
             key={type}
             onClick={(e) => handleReactionClick(e, type)}
-            title={`${label} (${matchingReactions.map((r) => r.author_name).join(', ') || 'Chưa có ai'})`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all transform active:scale-90 ${
+            title={`${label}: ${count} lượt (Từ: ${authorTooltip})`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all transform active:scale-75 ${
               hasReacted
                 ? `${activeColor} shadow-xs font-bold scale-105`
                 : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'

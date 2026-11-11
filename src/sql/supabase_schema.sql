@@ -37,15 +37,17 @@ CREATE TABLE IF NOT EXISTS public.comments (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 4. TẠO BẢNG CẢM XÚC (REACTIONS)
+-- 4. TẠO BẢNG CẢM XÚC (REACTIONS) - Cho phép thả cảm xúc vô hạn không giới hạn số lần
 CREATE TABLE IF NOT EXISTS public.reactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
     author_name TEXT NOT NULL,
     type TEXT NOT NULL, -- 'like', 'heart', 'star', 'fire', 'celebrate'
-    created_at TIMESTAMPTZ DEFAULT now(),
-    CONSTRAINT unique_user_post_reaction UNIQUE (post_id, author_name, type)
+    created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Nếu bảng reactions cũ của bạn từng có ràng buộc unique_user_post_reaction, hãy chạy dòng này để gỡ bỏ:
+-- ALTER TABLE public.reactions DROP CONSTRAINT IF EXISTS unique_user_post_reaction;
 
 -- 5. TẠO INDEXES ĐỂ TRUY VẤN CỰC NHANH
 CREATE INDEX IF NOT EXISTS idx_posts_group_id ON public.posts(group_id);

@@ -376,24 +376,21 @@ export async function toggleReactionInDB(
   authorName: string,
   type: ReactionItem['type']
 ): Promise<ReactionItem[]> {
+  // Thả cảm xúc vô hạn (mỗi lần bấm là tăng thêm 1 lượt thả tim/like)
+  const uniqueAuthorKey = `${authorName}#${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data: existing } = await supabase
+      const { error: insertErr } = await supabase
         .from('reactions')
-        .select('*')
-        .eq('post_id', postId)
-        .eq('author_name', authorName)
-        .eq('type', type)
-        .maybeSingle();
-
-      if (existing) {
-        await supabase.from('reactions').delete().eq('id', existing.id);
-      } else {
-        await supabase.from('reactions').insert([{
+        .insert([{
           post_id: postId,
-          author_name: authorName,
+          author_name: uniqueAuthorKey,
           type
         }]);
+
+      if (insertErr) {
+        console.warn('Supabase insert reaction warning:', insertErr);
       }
 
       const { data: updated } = await supabase
@@ -413,20 +410,14 @@ export async function toggleReactionInDB(
   local.posts = local.posts.map((p: PostItem) => {
     if (p.id === postId) {
       const current = p.reactions || [];
-      const hasReacted = current.find(r => r.author_name === authorName && r.type === type);
-      let next: ReactionItem[];
-      if (hasReacted) {
-        next = current.filter(r => !(r.author_name === authorName && r.type === type));
-      } else {
-        const newReaction: ReactionItem = {
-          id: `react-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          post_id: postId,
-          author_name: authorName,
-          type,
-          created_at: new Date().toISOString()
-        };
-        next = [...current, newReaction];
-      }
+      const newReaction: ReactionItem = {
+        id: `react-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        post_id: postId,
+        author_name: uniqueAuthorKey,
+        type,
+        created_at: new Date().toISOString()
+      };
+      const next = [...current, newReaction];
       updatedReactions = next;
       return { ...p, reactions: next };
     }
