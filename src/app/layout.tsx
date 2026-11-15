@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "THCS ĐẰNG LÂM - Nộp Bài Tập Nhóm & Chú Thích Trực Tuyến",
-  description: "Ứng dụng web nộp bài tập nhóm trường THCS Đằng Lâm: chia cột linh hoạt, vẽ chú thích chấm bài trên ảnh, bình luận và thảo luận trực tuyến.",
+  title: "THCS ĐẰNG LÂM - Môn Lịch sử & Địa lí 8 - Lớp Học Nhóm",
+  description: "Chuyên đề môn Lịch sử - Địa lí 8 trường THCS Đằng Lâm: Tích hợp năng lực số và hoạt động nhóm tương tác.",
 };
 
 export default function RootLayout({

@@ -266,7 +266,7 @@ export default function PadletPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100/90 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#fff5f7] dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       {/* Top Navigation */}
       <Header
         onAddGroup={handleAddGroup}

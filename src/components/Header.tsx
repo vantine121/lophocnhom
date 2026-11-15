@@ -21,11 +21,11 @@ export default function Header({
   onOpenNicknameModal,
 }: HeaderProps) {
   return (
-    <header className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-4 py-2 sm:py-2.5 shadow-xs">
+    <header className="bg-white/95 dark:bg-slate-900/95 border-b border-rose-100 dark:border-slate-800 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-4 py-2 sm:py-2.5 shadow-xs">
       <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-2 sm:gap-4">
-        {/* Brand / Logo (Trường THCS Đằng Lâm - To rõ, trang trọng, lấp đầy không gian) */}
+        {/* Brand / Logo (Trường THCS Đằng Lâm - Tổ KHXH) */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 ring-2 ring-blue-500/20 shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-600 to-rose-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20 ring-2 ring-rose-400/30 shrink-0">
             <School className="w-6 h-6 text-white" />
           </div>
           <div className="leading-tight text-left">
@@ -33,11 +33,11 @@ export default function Header({
               UBND QUẬN HẢI AN
             </span>
             <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-black uppercase tracking-tight text-blue-950 dark:text-white">
+              <h1 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">
                 THCS ĐẰNG LÂM
               </h1>
-              <span className="hidden sm:inline-flex text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                Tổ KHTN
+              <span className="hidden sm:inline-flex text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                Tổ KHXH
               </span>
             </div>
             <p className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400">
@@ -46,27 +46,26 @@ export default function Header({
           </div>
         </div>
 
-        {/* Center: Chuyên đề KHTN - Nổi bật, rộng rãi, hiển thị trọn vẹn 100% tiêu đề */}
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-2 sm:px-4 mx-1 sm:mx-3 py-1 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/70 dark:from-slate-800/70 dark:via-slate-800/50 dark:to-slate-800/70 border border-blue-100/90 dark:border-slate-700/60 shadow-xs min-w-0 max-w-4xl">
+        {/* Center: Chuyên đề KHXH (Lịch sử - Địa lí 8) chuẩn mẫu ảnh */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-3 sm:px-6 mx-1 sm:mx-3 py-1.5 rounded-3xl bg-white dark:bg-slate-900/90 border border-rose-100 dark:border-slate-700/60 shadow-sm min-w-0 max-w-4xl">
           {/* Top badges */}
-          <div className="flex items-center gap-2 justify-center mb-0.5 flex-wrap">
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-blue-600 text-white tracking-wider shadow-xs flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-300" />
+          <div className="flex items-center gap-2 justify-center mb-1 flex-wrap">
+            <span className="px-3 py-0.5 rounded-full text-[10.5px] font-black uppercase bg-slate-900 text-white tracking-wider shadow-xs">
               CHUYÊN ĐỀ
             </span>
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
-              Môn KHTN 6
+            <span className="px-3 py-0.5 rounded-full text-[10.5px] font-extrabold bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800">
+              Môn Lịch sử - Địa lí 8
             </span>
           </div>
 
-          {/* Dòng 1: Tiêu đề chuyên đề to rõ, hiển thị trọn vẹn không bị cắt ngắn */}
-          <h2 className="text-xs sm:text-[13px] md:text-sm lg:text-[15px] font-black tracking-tight text-blue-950 dark:text-white uppercase leading-snug">
-            PHÁT TRIỂN NĂNG LỰC SỐ VÀ TÍCH HỢP TIẾNG ANH CHUYÊN NGÀNH
+          {/* Dòng 1: Tiêu đề chuyên đề to rõ */}
+          <h2 className="text-xs sm:text-[14px] md:text-base lg:text-[17px] font-black tracking-tight text-slate-900 dark:text-white uppercase leading-snug">
+            CHUYÊN ĐỀ MÔN LỊCH SỬ - ĐỊA LÍ 8
           </h2>
 
-          {/* Dòng 2: Tên bài học nổi bật màu đỏ rực rỡ chuẩn poster */}
-          <p className="text-[11px] sm:text-xs md:text-[12.5px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wide leading-snug mt-0.5">
-            QUA BÀI 20 - SỰ LỚN LÊN VÀ SINH SẢN CỦA TẾ BÀO
+          {/* Dòng 2: Nội dung tích hợp nổi bật màu đỏ rực rỡ chuẩn mẫu ảnh */}
+          <p className="text-[11px] sm:text-xs md:text-[13px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wide leading-snug mt-0.5">
+            TÍCH HỢP NĂNG LỰC SỐ VÀ HOẠT ĐỘNG NHÓM TƯƠNG TÁC
           </p>
         </div>
 
@@ -76,10 +75,10 @@ export default function Header({
           {onOpenQrCode && (
             <button
               onClick={onOpenQrCode}
-              className="w-9 h-9 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 shadow-xs flex items-center justify-center transition transform active:scale-95"
+              className="w-9 h-9 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-rose-300 border border-rose-200 dark:border-slate-700 shadow-xs flex items-center justify-center transition transform active:scale-95"
               title="Mở mã QR lớp học"
             >
-              <QrCode className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <QrCode className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             </button>
           )}
 
@@ -97,7 +96,7 @@ export default function Header({
           {/* Add Group Button */}
           <button
             onClick={onAddGroup}
-            className="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs flex items-center justify-center transition transform active:scale-95"
+            className="w-9 h-9 rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-xs flex items-center justify-center transition transform active:scale-95"
             title="Thêm cột nhóm mới"
           >
             <Plus className="w-4 h-4" />
@@ -106,7 +105,7 @@ export default function Header({
           {/* User Nickname Button */}
           <button
             onClick={onOpenNicknameModal}
-            className="h-9 px-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs hover:border-indigo-400 transition flex items-center gap-1.5"
+            className="h-9 px-2.5 rounded-xl bg-white dark:bg-slate-800 border border-rose-200/80 dark:border-slate-700 shadow-xs hover:border-rose-400 transition flex items-center gap-1.5"
             title={`Biệt danh của bạn: ${currentNickname || 'Chưa đặt'}`}
           >
             <span className="text-base select-none leading-none">{currentAvatar || '🎒'}</span>
@@ -118,15 +117,12 @@ export default function Header({
       </div>
 
       {/* Mobile Topic Ribbon (chỉ hiện trên màn hình nhỏ di động) */}
-      <div className="md:hidden mt-2 pt-1.5 border-t border-slate-200/70 dark:border-slate-800 flex flex-col items-center gap-1 text-center">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider">
-          CHUYÊN ĐỀ MÔN KHTN 6
-        </div>
-        <div className="text-[11px] font-black text-blue-950 dark:text-white uppercase leading-tight">
-          Phát triển năng lực số & Tích hợp Tiếng Anh chuyên ngành
+      <div className="md:hidden mt-2 pt-1.5 border-t border-rose-100 dark:border-slate-800 flex flex-col items-center gap-1 text-center">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">
+          CHUYÊN ĐỀ MÔN LỊCH SỬ - ĐỊA LÍ 8
         </div>
         <div className="text-[10.5px] font-black text-rose-600 dark:text-rose-400 uppercase">
-          Bài 20 - Sự lớn lên và sinh sản của tế bào
+          Tích hợp năng lực số và hoạt động nhóm tương tác
         </div>
       </div>
     </header>
