@@ -1,4 +1,4 @@
-export type MediaType = 'none' | 'image' | 'video' | 'youtube';
+export type MediaType = 'none' | 'image' | 'video' | 'youtube' | 'link';
 
 export interface GroupColumn {
   id: string;

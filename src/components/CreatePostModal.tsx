@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { 
   X, Image as ImageIcon, Video, Play, FileText, 
-  Upload, AlertCircle, RefreshCw, Sparkles 
+  Upload, AlertCircle, RefreshCw, Sparkles, Link2, BookOpen 
 } from 'lucide-react';
 import { MediaType, GroupColumn } from '@/types/padlet';
 import { uploadMediaFile } from '@/lib/supabase';
@@ -216,13 +216,13 @@ export default function CreatePostModal({
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Đính kèm tệp phương tiện:
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => setMediaType('image')}
-                className={`py-2 px-2 sm:px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                className={`py-2 px-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
                   mediaType === 'image'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400'
+                    ? 'border-rose-600 bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 font-bold'
                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
@@ -232,10 +232,23 @@ export default function CreatePostModal({
 
               <button
                 type="button"
+                onClick={() => setMediaType('link')}
+                className={`py-2 px-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                  mediaType === 'link'
+                    ? 'border-rose-600 bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 font-bold'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Link2 className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                <span className="truncate">Link / Sách lật</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setMediaType('video')}
-                className={`py-2 px-2 sm:px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                className={`py-2 px-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
                   mediaType === 'video'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400'
+                    ? 'border-rose-600 bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 font-bold'
                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
@@ -246,9 +259,9 @@ export default function CreatePostModal({
               <button
                 type="button"
                 onClick={() => setMediaType('youtube')}
-                className={`py-2 px-2 sm:px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                className={`py-2 px-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
                   mediaType === 'youtube'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400'
+                    ? 'border-rose-600 bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 font-bold'
                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
@@ -257,6 +270,28 @@ export default function CreatePostModal({
               </button>
             </div>
           </div>
+
+          {/* Link / Flipbook Input */}
+          {mediaType === 'link' && (
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Đường dẫn liên kết (Link sách Heyzine, Canva, Drive, Website...):
+              </label>
+              <input
+                type="url"
+                value={mediaUrl}
+                onChange={(e) => setMediaUrl(e.target.value)}
+                placeholder="https://heyzine.com/flip-book/... hoặc https://..."
+                className="w-full px-3.5 py-2.5 text-base sm:text-xs font-medium rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+              <div className="p-3 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-900/50 flex items-start gap-2.5 text-[11px] text-rose-800 dark:text-rose-300">
+                <BookOpen className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                <div>
+                  <strong>Hỗ trợ nhúng Sách lật 3D:</strong> Dán link từ <strong>Heyzine.com</strong> (ví dụ: <code>https://heyzine.com/flip-book/...</code>) để hiển thị cuốn sách lật trang trực tiếp sinh động trong bài nộp!
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* File Upload Area */}
           {(mediaType === 'image' || mediaType === 'video') && (
@@ -322,7 +357,7 @@ export default function CreatePostModal({
           <button
             onClick={handleSubmit}
             disabled={isUploading}
-            className="px-5 py-2.5 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-500/25 transition disabled:opacity-50 flex items-center gap-1.5"
+            className="px-5 py-2.5 text-xs font-bold rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white shadow-md shadow-rose-500/25 transition disabled:opacity-50 flex items-center gap-1.5"
           >
             {isUploading ? (
               <>

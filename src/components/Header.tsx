@@ -30,7 +30,7 @@ export default function Header({
           </div>
           <div className="leading-tight text-left">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-              UBND QUẬN HẢI AN
+              UBND PHƯỜNG HẢI AN
             </span>
             <div className="flex items-center gap-2">
               <h1 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">
